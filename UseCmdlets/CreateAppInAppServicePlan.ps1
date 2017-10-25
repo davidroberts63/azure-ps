@@ -1,6 +1,6 @@
 ﻿[CmdletBinding()]
 param(
-    $groupName = 'SomeApp-Dev',
+    $groupName = 'TestRG',
     $locationName = 'South Central US',
     $planName = 'SomeApp',
     $webAppName = 'SomeAppUi',
@@ -101,69 +101,4 @@ $apiApp = (Get-AzureRmWebApp -AppServicePlan $plan) | Where Name -eq $apiAppName
 if(-not $apiApp) {
     Write-Host "Creating the $apiAppName web app in the $planName app service plan"
     New-AzureRmWebApp -AppServicePlan $plan.Name -ResourceGroupName $groupName -Name $apiAppName -Location $location.Location
-}
-
-#
-# Create virtual network
-#
-Write-Host "Ensuring the $planName virtual network exists"
-$vnet = Get-AzureRmVirtualNetwork -Name $planName -ResourceGroupName $groupName -ErrorAction SilentlyContinue
-if(-not $vnet) {
-    Write-Host "Creating the web subnet configuration for the $planName virtual network"
-    $subnet = New-AzureRmVirtualNetworkSubnetConfig -Name "web" -AddressPrefix 192.168.1.0/24
-    
-    Write-Host "Creating the gateway subnet configuration for the $planName virtual network"
-    $gatewaySubnet = New-AzureRmVirtualNetworkSubnetConfig -Name 'gateway' -AddressPrefix 192.168.2.0/27
-
-    Write-Host "Creating the $planName vnet"
-    $vnet = New-AzureRmVirtualNetwork -Name $planName -AddressPrefix 192.168.0.0/16 -Subnet @($subnet,$gatewaySubnet) -ResourceGroupName $groupName -Location $location.location
-}
-
-Write-Host "Ensuring the web subnet exists"
-$subnet = Get-AzureRmVirtualNetworkSubnetConfig -Name "web" -VirtualNetwork $vnet -ErrorAction SilentlyContinue
-if(-not $subnet) {
-    Write-Error "The web subnet was not in the $planName virtual network. Stopping"
-    return
-}
-
-Write-Host 'Ensuring the gateway subnet exists'
-$gatewaySubnet = Get-AzureRmVirtualNetworkSubnetConfig -Name 'gateway' -VirtualNetwork $vnet -ErrorAction SilentlyContinue
-if(-not $gatewaySubnet) {
-    Write-Host "Adding the gateway subnet to the $planName virtual network"
-    $gatewaySubnet = Add-AzureRmVirtualNetworkSubnetConfig -Name 'gateway' -VirtualNetwork $vnet -AddressPrefix 192.168.2.0/27
-    $vnet | Set-AzureRmVirtualNetwork
-}
-
-#
-# Create public IP address
-#
-Write-Host "Ensuring the $groupName public ip exists"
-$publicIp = Get-AzureRmPublicIpAddress -Name $groupName -ResourceGroupName $groupName -ErrorAction SilentlyContinue
-if(-not $publicIp) {
-    Write-Host "Creating $groupName public ip"
-    $publicIp = New-AzureRmPublicIpAddress -Name $groupName -ResourceGroupName $groupName -Location $location.location -AllocationMethod Dynamic -IdleTimeoutInMinutes 4
-}
-$publicIp | Select Name, IpAddress
-
-#
-# Network Security Group
-#
-Write-Host "Ensuring the $groupName network security group exists"
-$nsg = Get-AzureRmNetworkSecurityGroup -Name $groupName -ResourceGroupName $groupName -ErrorAction SilentlyContinue
-if(-not $nsg) {
-    Write-Host "Creating RdpRule nsg rule configuration for $groupName network security group"
-    $nsgRdpRule = New-AzureRmNetworkSecurityRuleConfig -Name "RdpRule" -Protocol TCP -Direction Inbound -Priority 1000 -SourceAddressPrefix * -SourcePortRange * -DestinationAddressPrefix * -DestinationPortRange 3389 -Access Allow
-
-    Write-Host "Creating the $groupName network security group"
-    $nsg = New-AzureRmNetworkSecurityGroup -Name $groupName -ResourceGroupName $groupName -Location $location.location -SecurityRules $nsgRdpRule
-}
-
-#
-# Network Card
-#
-Write-Host "Ensuring the nic1 network interface exists"
-$nic = Get-AzureRmNetworkInterface -Name nic1 -ResourceGroupName $groupName -ErrorAction SilentlyContinue
-if(-not $nic) {
-    Write-Host 'Creating nic1 network interface'
-    $nic = New-AzureRmNetworkInterface -Name nic1 -ResourceGroupName $groupName -Location $location.location -SubNetId $subnet.Id -PublicIpAddressId $publicIp.Id -NetworkSecurityGroupId $nsg.Id
 }

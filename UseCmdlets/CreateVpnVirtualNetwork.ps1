@@ -2,20 +2,32 @@
 param(
     $subscriptionName = 'Windows Azure  MSDN - Visual Studio Premium',
     $vnetName = 'VNet1',
-    $vnetSpace = '192.168.0.0/16',
-    $subnetName = 'FrontEnd',
-    $subnetSpace = '192.168.1.0/24',
+    $vnetSpace = '10.10.0.0/25',
+    $subnetName = 'default',
+    $subnetSpace = '10.10.0.0/26',
     $groupName = 'TestRG',
     $location = 'South Central US',
-    $gatewaySpace = '192.168.200.0/24',
+    $gatewaySpace = '10.10.0.96/27',
     $gatewayName = 'VNet1GW',
     $gatewayIpName = 'VNet1GWIP',
     $gatewayType = 'VPN',
     $vpnType = 'Route-Based',
     $publicIpName = 'VNet1GWpip',
     $connectionType = 'Point-to-site',
-    $clientPool = '172.16.201.0/24'
+    $clientPool = '10.10.0.128/26'
 )
+
+<#
+https://codehollow.com/2016/12/connect-azure-app-service-to-virtual-network/
+
+Azure address space: 10.10.0.0/24 (10.10.0.0 – 10.10.0.255)
+Virtual network: 10.10.0.0/25 (10.10.0.0 – 10.10.0.127)
+Default subnet: 10.10.0.0/26 (10.10.0.0 – 10.10.0.63)
+Free space: 10.10.0.64/27 (10.10.0.64 – 10.10.0.95) – for future use like backend subnet or any others
+Gateway subnet: 10.10.0.96/27 (10.10.0.96 – 10.10.0.127)
+Point-to-site space: 10.10.0.128/26 (10.10.0.128 – 10.10.0.191)
+Free space: 10.10.0.192/26 (10.10.0.192 – 10.10.0.255) – fur future use – can be added to virtual network or for additional virtual network gateways
+#>
 
 $ErrorActionPreference = 'STOP'
 Write-Host 'Importing AzureRM'
