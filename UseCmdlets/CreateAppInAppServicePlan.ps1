@@ -23,6 +23,8 @@ Here are some on VPN Gateways
 https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-create-site-to-site-rm-powershell
 https://docs.microsoft.com/en-us/azure/vpn-gateway/vpn-gateway-about-vpn-devices
 
+Creating an internal only App Service Environment
+https://docs.microsoft.com/en-us/azure/app-service/environment/create-ilb-ase
 #>
 
 $ErrorActionPreference = 'STOP'
